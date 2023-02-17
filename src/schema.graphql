@@ -1,0 +1,14 @@
+type City {
+  cityName: String!
+  visited: Boolean
+}
+
+type Query {
+  getAllCities: [City]
+  getCityByName(cityName: String!): City
+}
+
+type Mutation {
+  addCity(cityName: String!, visited: Boolean): City
+  updateCity(cityName: String!, visited: Boolean!): City
+}
