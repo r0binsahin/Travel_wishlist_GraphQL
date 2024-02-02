@@ -58,7 +58,7 @@ const getAllCitiesQueryVars = `{
             visited,
           }; `;
 
-const url = "http://localhost:5000/graphql";
+const url = "https://travel-wish-list-service.onrender.com/graphql";
 
 ///--------
 
