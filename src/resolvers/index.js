@@ -1,97 +1,91 @@
-const path = require('path')
-const fsPromises = require('fs/promises')
-const { fileExists, readJsonFile, deleteFile, getDirectoryFileNames } = require('../utils/fileHandling')
-const { GraphQLError, printType, visit } = require('graphql')
-const { dir } = require('console')
+const path = require("path");
+const fsPromises = require("fs/promises");
+const { fileExists, getDirectoryFileNames } = require("../utils/fileHandling");
+const { GraphQLError, printType, visit } = require("graphql");
+const { dir } = require("console");
 //const crypto = require('crypto')
-const axios = require('axios').default
+const axios = require("axios").default;
 
-const directory = path.join (__dirname, "..", "data", "cities")
+const directory = path.join(__dirname, "..", "data", "cities");
 
 exports.resolvers = {
-    Query: {
-        getAllCities: async (_, args)=>{ 
+  Query: {
+    getAllCities: async (_, args) => {
+      let cityData = await getDirectoryFileNames(directory);
+      let cities = [];
 
-            let cityData = await getDirectoryFileNames(directory)
-            let cities = []
+      for (const file of cityData) {
+        const filePath = path.join(directory, file);
+        const fileContents = await fsPromises.readFile(filePath, {
+          encoding: "utf-8",
+        });
+        const data = JSON.parse(fileContents);
+        cities.push(data);
+      }
 
-            for(const file of cityData) {
-                const filePath = path.join(directory, file)
-                const fileContents = await fsPromises.readFile(filePath, { encoding: 'utf-8' })
-                const data = JSON.parse(fileContents)
-                cities.push(data)
-            }
-
-			return  cities 
-        },
-
-        getCityByName: async (_, args) =>{
-            const cityName = args.cityName
-            const filePath = path.join(directory, `${cityName}.json`)
-
-            const citiesExists = await fileExists(filePath)
-
-            if(!citiesExists) return new GraphQLError("The data does not exist")
-
-            const citiesData = await fsPromises.readFile(filePath, { encoding: 'utf-8' })
-            const city = JSON.parse(citiesData)
-
-            return city
-        }
-
-
+      return cities;
     },
 
-    Mutation: {
-        updateCity: async (_, args)=> {
+    getCityByName: async (_, args) => {
+      const cityName = args.cityName;
+      const filePath = path.join(directory, `${cityName}.json`);
 
-            const {cityName, visited} = args
-            const filePath = path.join(directory, `${cityName}.json`)
+      const citiesExists = await fileExists(filePath);
 
-            const projectExists = await fileExists(filePath)
-			if (!projectExists) return new GraphQLError('That project does not exist')
+      if (!citiesExists) return new GraphQLError("The data does not exist");
 
-            const updatedCity = {
-                cityName,
-                visited
-            }
+      const citiesData = await fsPromises.readFile(filePath, {
+        encoding: "utf-8",
+      });
+      const city = JSON.parse(citiesData);
 
-            await fsPromises.writeFile(filePath, JSON.stringify(updatedCity))
+      return city;
+    },
+  },
 
-            return updatedCity
+  Mutation: {
+    updateCity: async (_, args) => {
+      const { cityName, visited } = args;
+      const filePath = path.join(directory, `${cityName}.json`);
 
-        },
+      const projectExists = await fileExists(filePath);
+      if (!projectExists)
+        return new GraphQLError("That project does not exist");
 
-        addCity: async (_, args)=> {
-    
-            const cityName = args.cityName
-            const visited = args.visited
+      const updatedCity = {
+        cityName,
+        visited,
+      };
 
-            if(args.cityName.length === 0) return new GraphQLError("City name must be at least 1 character")
+      await fsPromises.writeFile(filePath, JSON.stringify(updatedCity));
 
+      return updatedCity;
+    },
 
-  
-            const newCity = {
-                cityName,
-                visited: visited || false,
-            }
+    addCity: async (_, args) => {
+      const cityName = args.cityName;
+      const visited = args.visited;
 
-            const filePath = path.join(directory, `${cityName}.json`)
-         //   let cityExist = true
+      if (args.cityName.length === 0)
+        return new GraphQLError("City name must be at least 1 character");
 
-                const exists = await fileExists(filePath)
+      const newCity = {
+        cityName,
+        visited: visited || false,
+      };
 
-                if(exists) {
-                    return new GraphQLError('City already exists')
-                }
+      const filePath = path.join(directory, `${cityName}.json`);
 
+      const exists = await fileExists(filePath);
 
+      if (exists) {
+        return new GraphQLError("City already exists");
+      }
 
-            await fsPromises.writeFile(filePath, JSON.stringify(newCity))
+      await fsPromises.writeFile(filePath, JSON.stringify(newCity));
+      console.log(cities);
 
-            return newCity
-
-        }
-
-    }
-}
+      return newCity;
+    },
+  },
+};

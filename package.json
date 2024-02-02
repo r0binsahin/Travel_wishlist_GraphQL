@@ -7,10 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon ./src/server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/petter0619/killbug-bugtracker.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
